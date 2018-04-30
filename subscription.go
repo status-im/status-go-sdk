@@ -10,11 +10,14 @@ import (
 // asynchronous subscribers.
 type MsgHandler func(msg *Msg)
 
+// Subscription is a polling helper for a specific channel
 type Subscription struct {
 	unsubscribe chan bool
 	channel     *Channel
 }
 
+// Subscribe polls on specific channel topic and executes given function if
+// any message is received
 func (s *Subscription) Subscribe(channel *Channel, fn MsgHandler) {
 	s.channel = channel
 	s.unsubscribe = make(chan bool)
@@ -24,7 +27,7 @@ func (s *Subscription) Subscribe(channel *Channel, fn MsgHandler) {
 			return
 		default:
 			cmd := fmt.Sprintf(getFilterMessagesFormat, channel.filterID)
-			response, err := channel.conn.rpc.Call(cmd)
+			response, err := channel.conn.call(cmd)
 			if err != nil {
 				log.Fatalf("Error when sending request to server: %s", err)
 			}
@@ -39,7 +42,9 @@ func (s *Subscription) Subscribe(channel *Channel, fn MsgHandler) {
 					if err != nil {
 						log.Println(err)
 					} else {
-						fn(message)
+						if supportedMessage(message.Type) {
+							fn(message)
+						}
 					}
 				}
 			default:
@@ -50,6 +55,7 @@ func (s *Subscription) Subscribe(channel *Channel, fn MsgHandler) {
 	}
 }
 
+// Unsubscribe stops polling on the current subscription channel
 func (s *Subscription) Unsubscribe() {
 	s.unsubscribe <- true
 	s.channel.removeSubscription(s)

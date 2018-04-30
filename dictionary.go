@@ -8,7 +8,11 @@ var (
 	web3ShaFormat                    = `{"jsonrpc":"2.0","method":"web3_sha3","params":["%s"],"id":%d}`
 	statusLoginFormat                = `{"jsonrpc":"2.0","method":"status_login","params":["%s","%s"]}`
 	statusSignupFormat               = `{"jsonrpc":"2.0","method":"status_signup","params":["%s","%s"]}`
-	statusJoinPublicChannel          = `{"jsonrpc":"2.0","method":"status_joinpublicchannel","params":["%s"]}`
 
-	messagePayloadFormat = `["~#c4",["%s","text/plain","~:public-group-user-message",%d,%d]]`
+	newContactKeyMsg           = `["~#c1",["%s","%s",%s]`
+	contactRequestMsg          = `["~#c2",["%s","%s","%s","%s”]]]`
+	confirmedContactRequestMsg = `["~#c3",["%s","%s","%s","%s"]]`
+	messagePayloadMsg          = `["~#c4",["%s","text/plain","~:public-group-user-message",%d,%d]]`
+	seenMsg                    = `["~#c5",["%s","%s"]]`
+	contactUpdateMsg           = `["~#c6",["%s","%s"]]`
 )
