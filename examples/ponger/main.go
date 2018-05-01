@@ -11,24 +11,29 @@ import (
 )
 
 func main() {
-	conn := sdk.NewConn()
+	client := sdk.New("localhost:30303")
 
-	if err := conn.SignupOrLogin("supu", "password"); err != nil {
+	addr, _, _, err := client.Signup("password")
+	if err != nil {
+		return
+	}
+
+	if err := client.Login(addr, "password"); err != nil {
 		panic(err)
 	}
 
-	ch, err := conn.Join("supu")
+	ch, err := client.JoinPublicChannel("supu")
 	if err != nil {
 		panic("Couldn't connect to status")
 	}
 
-	ch.Subscribe(func(m *sdk.Msg) {
+	_, _ = ch.Subscribe(func(m *sdk.Msg) {
 		log.Println("Message from ", m.From, " with body: ", m.Text)
 
 		if strings.Contains(m.Text, "PING :") {
 			time.Sleep(5 * time.Second)
 			message := fmt.Sprintf("PONG : %d", time.Now().Unix())
-			ch.Publish(message)
+			_ = ch.Publish(message)
 		}
 
 	})

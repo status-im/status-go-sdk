@@ -8,18 +8,24 @@ import (
 )
 
 func main() {
-	conn := sdk.NewConn("localhost:30303")
-	if err := conn.Signup("111222333"); err != nil {
-		panic("Couldn't create an account")
+	client := sdk.New("localhost:30303")
+
+	addr, _, _, err := client.Signup("password")
+	if err != nil {
+		return
 	}
 
-	ch, err := conn.Join("supu")
+	if err := client.Login(addr, "password"); err != nil {
+		panic(err)
+	}
+
+	ch, err := client.JoinPublicChannel("supu")
 	if err != nil {
 		panic("Couldn't connect to status")
 	}
 
 	for range time.Tick(10 * time.Second) {
 		message := fmt.Sprintf("PING : %d", time.Now().Unix())
-		ch.Publish(message)
+		_ = ch.Publish(message)
 	}
 }
