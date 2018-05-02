@@ -52,6 +52,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	if len(os.Args) != 2 {
+		fmt.Printf("you must specify the public chat name you want to join ")
+		fmt.Printf("Try with: %s \"PUBLIC_CHAT_NAME\"\n", os.Args[0])
+		os.Exit(1)
+	}
+
 	whisperClient, err := shhclient.Dial(ipcPath)
 	check(err)
 
@@ -70,6 +76,8 @@ func main() {
 	// keypair
 	keyPairID, err := whisperClient.NewKeyPair(ctx)
 	check(err)
+
+	fmt.Printf("write a message after the \">>\" and send it:\n")
 
 	for {
 		text := readLine()
