@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 )
@@ -54,22 +53,10 @@ func supportedMessage(msgType string) bool {
 // Msg is a structure used by Subscribers and Publish().
 type Msg struct {
 	From        string `json:"from"`
-	Text        string `json:"text"`
 	ChannelName string `json:"channel"`
-	Timestamp   int64  `json:"ts"`
 	Raw         string `json:"-"`
 	Type        string `json:"-"`
 	Properties  interface{}
-}
-
-// NewMsg creates a new Msg with a generated UUID
-func NewMsg(from, text, channel string) *Msg {
-	return &Msg{
-		From:        from,
-		Text:        text,
-		ChannelName: channel,
-		Timestamp:   time.Now().Unix(),
-	}
 }
 
 // ID gets the message id
@@ -107,8 +94,6 @@ func messageFromPayload(payload string) (*Msg, error) {
 	if len(msg) < 1 {
 		return nil, errors.New("unknown message format")
 	}
-	// TODO (adriacidre) : this is only offering support for standard message
-	// types `~#c4`, extend it so it can manage multiple message types
 
 	msgType := msg[0].(string)
 	if !supportedMessage(msgType) {
@@ -153,8 +138,8 @@ type PublishMsg struct {
 	Text       string
 	MimeType   string
 	Visibility string
-	ClockValue int64
-	Timestamp  int64
+	ClockValue float64
+	Timestamp  float64
 }
 
 func publishMsgFromProperties(properties []interface{}) *PublishMsg {
@@ -162,11 +147,12 @@ func publishMsgFromProperties(properties []interface{}) *PublishMsg {
 		Text:       properties[0].(string),
 		MimeType:   properties[1].(string),
 		Visibility: properties[2].(string),
-		ClockValue: properties[3].(int64),
-		Timestamp:  properties[4].(int64),
+		ClockValue: properties[3].(float64),
+		Timestamp:  properties[4].(float64),
 	}
 }
 
+// ContactMsg parsed struct for ContactRequestType
 type ContactMsg struct {
 	Name     string
 	Image    string
@@ -185,6 +171,7 @@ func contactMsgFromProperties(properties []interface{}) *ContactMsg {
 	}
 }
 
+// NewContactKeyMsg parsed struct for NewContactKeyType
 type NewContactKeyMsg struct {
 	Address string
 	Topic   string
@@ -201,6 +188,7 @@ func newContactKeyMsgFromProperties(properties []interface{}) *NewContactKeyMsg 
 	}
 }
 
+// ConfirmedContactMsg parsed struct for ConfirmedContactRequestType
 type ConfirmedContactMsg struct {
 	Name     string
 	Image    string
@@ -217,6 +205,7 @@ func confirmedContactMsgFromProperties(properties []interface{}) *ConfirmedConta
 	}
 }
 
+// SeenMsg parsed struct for SeenType
 type SeenMsg struct {
 	ID1 string
 	ID2 string
@@ -229,6 +218,7 @@ func seenMsgFromProperties(properties []interface{}) *SeenMsg {
 	}
 }
 
+// ContactUpdateMsg parsed struct for ContactUpdateType
 type ContactUpdateMsg struct {
 	Name  string
 	Image string
@@ -241,6 +231,7 @@ func contactUpdateMsgFromProperties(properties []interface{}) *ContactUpdateMsg 
 	}
 }
 
+// PNBroadcastAvailabilityMsg parsed struct for PNBroadcastAvailabilityType
 type PNBroadcastAvailabilityMsg struct {
 	Pubkey string
 }
@@ -251,6 +242,7 @@ func pnBroadcastAvailabilityMsgFromProperties(properties []interface{}) *PNBroad
 	}
 }
 
+// PNRegistrationMsg parsed struct for PNRegistrationType
 type PNRegistrationMsg struct {
 	Symkey           string
 	Topic            string
@@ -267,6 +259,7 @@ func pnRegistrationMsgFromProperties(properties []interface{}) *PNRegistrationMs
 	}
 }
 
+// PNRegistrationConfirmationMsg parsed struct for PNRegistrationConfirmationType
 type PNRegistrationConfirmationMsg struct {
 	Pubkey string
 }
