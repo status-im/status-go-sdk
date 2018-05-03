@@ -11,7 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 )
 
-var (
+const (
 	// NewContactKeyType message type for newContactKeyFormat
 	NewContactKeyType = "~#c1"
 	// ContactRequestType message type for contactRequestFormat
@@ -32,7 +32,7 @@ var (
 	PNRegistrationType = "~#c91"
 	// PNRegistrationConfirmationType message type to allow a push notification
 	// server confirm a registration
-	PNRegistrationConfirmationType = "~#c90"
+	PNRegistrationConfirmationType = "~#c92"
 )
 
 // supportedMessage check if the message type is supported
@@ -116,11 +116,16 @@ func messageFromPayload(payload string) (*Msg, error) {
 
 	properties := msg[1].([]interface{})
 
+	timestamp := time.Now().Unix() * 100
+	if len(properties) > 2 {
+		timestamp = int64(properties[3].(float64))
+	}
+
 	return &Msg{
 		Type:      msgType,
 		From:      "TODO : someone",
 		Text:      properties[0].(string),
-		Timestamp: int64(properties[3].(float64)),
+		Timestamp: timestamp,
 		Raw:       string(rawMsg),
 	}, nil
 }

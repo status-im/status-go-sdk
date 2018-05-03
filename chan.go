@@ -151,9 +151,9 @@ func (c *Channel) PNBroadcastAvailabilityRequest() {
 // communications happen through this channel.
 // Additionally a device token will identify the device on the push notification
 // provider.
-func (c *Channel) PNRegistrationRequest(symkey, topic, deviceToken string) {
+func (c *Channel) PNRegistrationRequest(symkey, topic, deviceToken string, slotAvailabilityRatio float32) {
 	format := `["%s",["%s","%s","%s"]]]`
-	msg := fmt.Sprintf(format, PNRegistrationType, symkey, topic, deviceToken)
+	msg := fmt.Sprintf(format, PNRegistrationType, symkey, topic, deviceToken, slotAvailabilityRatio)
 	c.SendPostRawMsg(msg)
 }
 
