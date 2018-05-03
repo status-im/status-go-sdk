@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 )
 
@@ -23,17 +24,29 @@ var (
 	SeenType = "~#c5"
 	// ContactUpdateType message type for contactUpdateMsg
 	ContactUpdateType = "~#c6"
+	// PNBroadcastAvailabilityType message type for push notification broadcast
+	// availability
+	PNBroadcastAvailabilityType = "~#c90"
+	// PNRegistrationType message type for sending a registration request to
+	// a push notification server
+	PNRegistrationType = "~#c91"
+	// PNRegistrationConfirmationType message type to allow a push notification
+	// server confirm a registration
+	PNRegistrationConfirmationType = "~#c90"
 )
 
 // supportedMessage check if the message type is supported
 func supportedMessage(msgType string) bool {
 	_, ok := map[string]bool{
-		NewContactKeyType:           true,
-		ContactRequestType:          true,
-		ConfirmedContactRequestType: true,
-		StandardMessageType:         true,
-		SeenType:                    true,
-		ContactUpdateType:           true,
+		NewContactKeyType:              true,
+		ContactRequestType:             true,
+		ConfirmedContactRequestType:    true,
+		StandardMessageType:            true,
+		SeenType:                       true,
+		ContactUpdateType:              true,
+		PNBroadcastAvailabilityType:    true,
+		PNRegistrationType:             true,
+		PNRegistrationConfirmationType: true,
 	}[msgType]
 
 	return ok
@@ -64,16 +77,6 @@ func (m *Msg) ID() string {
 	return fmt.Sprintf("%X", sha3.Sum256([]byte(m.Raw)))
 }
 
-// ToPayload converts current struct to a valid payload
-func (m *Msg) ToPayload() string {
-	message := fmt.Sprintf(messagePayloadMsg,
-		m.Text,
-		m.Timestamp*100,
-		m.Timestamp)
-
-	return rawrChatMessage(message)
-}
-
 func rawrChatMessage(raw string) string {
 	bytes := []byte(raw)
 
@@ -84,14 +87,19 @@ func unrawrChatMessage(message string) ([]byte, error) {
 	return hex.DecodeString(message[2:])
 }
 
-// MessageFromPayload creates a message from a payload
-func MessageFromPayload(payload string) (*Msg, error) {
+func messageFromEnvelope(u interface{}) (msg *Msg, err error) {
+	payload := u.(map[string]interface{})["payload"]
+	return messageFromPayload(payload.(string))
+}
+
+func messageFromPayload(payload string) (*Msg, error) {
 	var msg []interface{}
 
 	rawMsg, err := unrawrChatMessage(payload)
 	if err != nil {
 		return nil, err
 	}
+	spew.Dump(rawMsg)
 
 	if err = json.Unmarshal(rawMsg, &msg); err != nil {
 		return nil, err

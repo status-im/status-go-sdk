@@ -1,8 +1,6 @@
 package sdk
 
 import (
-	"fmt"
-	"log"
 	"time"
 )
 
@@ -16,11 +14,6 @@ type Subscription struct {
 	channel     *Channel
 }
 
-// SubscriptionResponse json response for shh_getFilterMessages requests
-type SubscriptionResponse struct {
-	Result interface{} `json:"result"`
-}
-
 // Subscribe polls on specific channel topic and executes given function if
 // any message is received
 func (s *Subscription) Subscribe(channel *Channel, fn MsgHandler) {
@@ -30,28 +23,8 @@ func (s *Subscription) Subscribe(channel *Channel, fn MsgHandler) {
 		case <-s.unsubscribe:
 			return
 		default:
-			var res SubscriptionResponse
-			cmd := fmt.Sprintf(getFilterMessagesFormat, channel.filterID)
-			if err := channel.conn.call(cmd, &res); err != nil {
-				log.Fatalf("Error when sending request to server: %s", err)
-				continue
-			}
-
-			switch vv := res.Result.(type) {
-			case []interface{}:
-				for _, u := range vv {
-					payload := u.(map[string]interface{})["payload"]
-					message, err := MessageFromPayload(payload.(string))
-					if err != nil {
-						log.Println(err)
-					} else {
-						if supportedMessage(message.Type) {
-							fn(message)
-						}
-					}
-				}
-			default:
-				log.Println(res.Result, "is of a type I don't know how to handle")
+			if msg := channel.pollMessages(); msg != nil {
+				fn(msg)
 			}
 		}
 		// TODO(adriacidre) : move this period to configuration
