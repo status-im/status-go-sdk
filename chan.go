@@ -140,7 +140,7 @@ func (c *Channel) SendPostRawMsg(body string) error {
 // servers to broadcast its availability, this request is exposing current
 // push notification server Public Key.
 func (c *Channel) PNBroadcastAvailabilityRequest() {
-	format := `["%s",["%s"]]]`
+	format := `["%s",["%s"]]`
 	msg := fmt.Sprintf(format, PNBroadcastAvailabilityType, c.conn.address)
 	c.SendPostRawMsg(msg)
 }

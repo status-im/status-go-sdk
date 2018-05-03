@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 )
 
@@ -60,6 +59,7 @@ type Msg struct {
 	Timestamp   int64  `json:"ts"`
 	Raw         string `json:"-"`
 	Type        string `json:"-"`
+	Properties  interface{}
 }
 
 // NewMsg creates a new Msg with a generated UUID
@@ -99,7 +99,6 @@ func messageFromPayload(payload string) (*Msg, error) {
 	if err != nil {
 		return nil, err
 	}
-	spew.Dump(rawMsg)
 
 	if err = json.Unmarshal(rawMsg, &msg); err != nil {
 		return nil, err
@@ -108,24 +107,172 @@ func messageFromPayload(payload string) (*Msg, error) {
 	if len(msg) < 1 {
 		return nil, errors.New("unknown message format")
 	}
+	// TODO (adriacidre) : this is only offering support for standard message
+	// types `~#c4`, extend it so it can manage multiple message types
 
 	msgType := msg[0].(string)
 	if !supportedMessage(msgType) {
 		return nil, errors.New("unsupported message type")
 	}
 
-	properties := msg[1].([]interface{})
-
-	timestamp := time.Now().Unix() * 100
-	if len(properties) > 2 {
-		timestamp = int64(properties[3].(float64))
+	message := Msg{
+		From: "TODO : someone",
+		Type: msgType,
+		Raw:  string(rawMsg),
 	}
 
-	return &Msg{
-		Type:      msgType,
-		From:      "TODO : someone",
-		Text:      properties[0].(string),
-		Timestamp: timestamp,
-		Raw:       string(rawMsg),
-	}, nil
+	properties := msg[1].([]interface{})
+	switch msgType {
+	case NewContactKeyType:
+		message.Properties = newContactKeyMsgFromProperties(properties)
+	case ContactRequestType:
+		message.Properties = contactMsgFromProperties(properties)
+	case ConfirmedContactRequestType:
+		message.Properties = confirmedContactMsgFromProperties(properties)
+	case StandardMessageType:
+		message.Properties = publishMsgFromProperties(properties)
+	case SeenType:
+		message.Properties = seenMsgFromProperties(properties)
+	case ContactUpdateType:
+		message.Properties = contactUpdateMsgFromProperties(properties)
+	case PNBroadcastAvailabilityType:
+		message.Properties = pnBroadcastAvailabilityMsgFromProperties(properties)
+	case PNRegistrationType:
+		message.Properties = pnRegistrationMsgFromProperties(properties)
+	case PNRegistrationConfirmationType:
+		// message.Properties = newPublishMessageFromProperties(properties)
+	default:
+		return nil, errors.New("unsupported message type")
+	}
+
+	return &message, nil
+}
+
+// PublishMsg representation of a StandardMessageType
+type PublishMsg struct {
+	Text       string
+	MimeType   string
+	Visibility string
+	ClockValue int64
+	Timestamp  int64
+}
+
+func publishMsgFromProperties(properties []interface{}) *PublishMsg {
+	return &PublishMsg{
+		Text:       properties[0].(string),
+		MimeType:   properties[1].(string),
+		Visibility: properties[2].(string),
+		ClockValue: properties[3].(int64),
+		Timestamp:  properties[4].(int64),
+	}
+}
+
+type ContactMsg struct {
+	Name     string
+	Image    string
+	Address  string
+	FCMToken string // This will be deprecated
+}
+
+func contactMsgFromProperties(properties []interface{}) *ContactMsg {
+	crProperties := properties[2].([]interface{})
+
+	return &ContactMsg{
+		Name:     crProperties[0].(string),
+		Image:    crProperties[1].(string),
+		Address:  crProperties[2].(string),
+		FCMToken: crProperties[3].(string),
+	}
+}
+
+type NewContactKeyMsg struct {
+	Address string
+	Topic   string
+	Contact *ContactMsg
+}
+
+func newContactKeyMsgFromProperties(properties []interface{}) *NewContactKeyMsg {
+	crProperties := properties[2].([]interface{})
+
+	return &NewContactKeyMsg{
+		Address: properties[0].(string),
+		Topic:   properties[1].(string),
+		Contact: contactMsgFromProperties(crProperties),
+	}
+}
+
+type ConfirmedContactMsg struct {
+	Name     string
+	Image    string
+	Address  string
+	FCMToken string // This will be deprecated
+}
+
+func confirmedContactMsgFromProperties(properties []interface{}) *ConfirmedContactMsg {
+	return &ConfirmedContactMsg{
+		Name:     properties[0].(string),
+		Image:    properties[1].(string),
+		Address:  properties[2].(string),
+		FCMToken: properties[3].(string),
+	}
+}
+
+type SeenMsg struct {
+	ID1 string
+	ID2 string
+}
+
+func seenMsgFromProperties(properties []interface{}) *SeenMsg {
+	return &SeenMsg{
+		ID1: properties[0].(string),
+		ID2: properties[1].(string),
+	}
+}
+
+type ContactUpdateMsg struct {
+	Name  string
+	Image string
+}
+
+func contactUpdateMsgFromProperties(properties []interface{}) *ContactUpdateMsg {
+	return &ContactUpdateMsg{
+		Name:  properties[0].(string),
+		Image: properties[1].(string),
+	}
+}
+
+type PNBroadcastAvailabilityMsg struct {
+	Pubkey string
+}
+
+func pnBroadcastAvailabilityMsgFromProperties(properties []interface{}) *PNBroadcastAvailabilityMsg {
+	return &PNBroadcastAvailabilityMsg{
+		Pubkey: properties[0].(string),
+	}
+}
+
+type PNRegistrationMsg struct {
+	Symkey           string
+	Topic            string
+	DeviceToken      string
+	SlotAvailability float32
+}
+
+func pnRegistrationMsgFromProperties(properties []interface{}) *PNRegistrationMsg {
+	return &PNRegistrationMsg{
+		Symkey:           properties[0].(string),
+		Topic:            properties[1].(string),
+		DeviceToken:      properties[2].(string),
+		SlotAvailability: properties[3].(float32),
+	}
+}
+
+type PNRegistrationConfirmationMsg struct {
+	Pubkey string
+}
+
+func pnRegistrationConfirmationMsgFromProperties(properties []interface{}) *PNRegistrationConfirmationMsg {
+	return &PNRegistrationConfirmationMsg{
+		Pubkey: properties[0].(string),
+	}
 }
