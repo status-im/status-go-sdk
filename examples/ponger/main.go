@@ -3,40 +3,57 @@ package main
 import (
 	"fmt"
 	"log"
-	"runtime"
 	"strings"
 	"time"
 
-	"github.com/status-im/status-go-sdk"
+	"github.com/ethereum/go-ethereum/rpc"
+	sdk "github.com/status-im/status-go-sdk"
 )
 
+func checkErr(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func main() {
-	client := sdk.New("localhost:30303")
+	rpcClient, err := rpc.Dial("http://localhost:8545")
+	checkErr(err)
+	client := sdk.NewClient(rpcClient)
 
-	addr, _, _, err := client.Signup("password")
-	if err != nil {
-		return
-	}
+	address, err := client.Signup("foobar")
+	checkErr(err)
+	fmt.Printf("Account created: %+v\n", address)
 
-	if err := client.Login(addr, "password"); err != nil {
-		panic(err)
-	}
+	_, err = client.Login(address, "foobar")
+	checkErr(err)
 
-	ch, err := client.JoinPublicChannel("supu")
-	if err != nil {
-		panic("Couldn't connect to status")
-	}
+	chatName := "testsdkfoobarbaz"
+	symKeyID, err := client.PublicChatSymKey(chatName)
+	checkErr(err)
 
-	_, _ = ch.Subscribe(func(m *sdk.Msg) {
-		log.Println("Message from ", m.From, " with body: ", m.Text)
+	topic := client.PublicChatTopic(chatName)
 
-		if strings.Contains(m.Text, "PING :") {
-			time.Sleep(5 * time.Second)
-			message := fmt.Sprintf("PONG : %d", time.Now().Unix())
-			_ = ch.Publish(message)
+	filterID, err := client.NewFilter(topic, symKeyID)
+	checkErr(err)
+
+	for {
+		msgs, err := client.FilterMessages(filterID)
+		checkErr(err)
+
+		fmt.Printf("%d messages\n", len(msgs))
+
+		for _, msg := range msgs {
+			if !strings.Contains(strings.ToLower(string(msg.Payload)), "ping") {
+				continue
+			}
+
+			text := fmt.Sprintf("PONG %d", time.Now().UnixNano())
+			hash, err := client.Post(symKeyID, topic, text)
+			checkErr(err)
+			fmt.Printf("Message sent with hash %s\n", hash)
 		}
 
-	})
-
-	runtime.Goexit()
+		time.Sleep(time.Second * 5)
+	}
 }

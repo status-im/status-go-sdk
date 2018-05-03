@@ -3,12 +3,15 @@ package sdk
 import (
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"log"
+
+	"github.com/ethereum/go-ethereum/rpc"
 )
 
 // SDK is a set of tools to interact with status node
 type SDK struct {
-	RPCClient  RPCClient
+	rpcClient  RPCClient
 	address    string
 	pubkey     string
 	mnemonic   string
@@ -18,9 +21,9 @@ type SDK struct {
 }
 
 // New creates a default SDK object
-func New(address string) *SDK {
+func New(c *rpc.Client) *SDK {
 	return &SDK{
-		// RPCClient:  newRPC(address),
+		rpcClient:  c,
 		minimumPoW: 0.001,
 	}
 }
@@ -111,7 +114,6 @@ func (c *SDK) JoinPublicChannel(channelName string) (*Channel, error) {
 		channelKey: key,
 	}
 	c.channels = append(c.channels, ch)
-
 	return ch, nil
 }
 
@@ -128,8 +130,10 @@ func (c *SDK) calculatePublicChannelTopicID(name string, symkey int) (topicID st
 
 func (c *SDK) call(cmd string, res interface{}) error {
 	log.Println("[ REQUEST ] : " + cmd)
-	body, err := c.RPCClient.Call(cmd)
+	var body interface{}
+	err := c.rpcClient.Call(&res, cmd)
 	if err != nil {
+		fmt.Printf("%+v\n", err)
 		return err
 	}
 	log.Println("[ RESPONSE ] : " + body.(string))

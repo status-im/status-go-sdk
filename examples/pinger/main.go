@@ -2,30 +2,42 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"time"
 
-	"github.com/status-im/status-go-sdk"
+	"github.com/ethereum/go-ethereum/rpc"
+	sdk "github.com/status-im/status-go-sdk"
 )
 
+func checkErr(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func main() {
-	client := sdk.New("localhost:30303")
+	rpcClient, err := rpc.Dial("http://localhost:8545")
+	checkErr(err)
+	client := sdk.NewClient(rpcClient)
 
-	addr, _, _, err := client.Signup("password")
-	if err != nil {
-		return
-	}
+	address, err := client.Signup("foobar")
+	checkErr(err)
+	fmt.Printf("Account created: %+v\n", address)
 
-	if err := client.Login(addr, "password"); err != nil {
-		panic(err)
-	}
+	_, err = client.Login(address, "foobar")
+	checkErr(err)
 
-	ch, err := client.JoinPublicChannel("supu")
-	if err != nil {
-		panic("Couldn't connect to status")
-	}
+	chatName := "testsdkfoobarbaz"
+	symKeyID, err := client.PublicChatSymKey(chatName)
+	checkErr(err)
 
-	for range time.Tick(10 * time.Second) {
-		message := fmt.Sprintf("PING : %d", time.Now().Unix())
-		_ = ch.Publish(message)
+	topic := client.PublicChatTopic(chatName)
+
+	for {
+		text := fmt.Sprintf("PING %d", time.Now().UnixNano())
+		hash, err := client.Post(symKeyID, topic, text)
+		checkErr(err)
+		fmt.Printf("Message sent with hash %s\n", hash)
+		time.Sleep(time.Second * 5)
 	}
 }
