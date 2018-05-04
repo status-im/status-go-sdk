@@ -18,9 +18,9 @@ type SDK struct {
 }
 
 // New creates a default SDK object
-func New(address string) *SDK {
+func New(c RPCClient) *SDK {
 	return &SDK{
-		// RPCClient:  newRPC(address),
+		RPCClient:  c,
 		minimumPoW: 0.001,
 	}
 }
