@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"encoding/json"
+	"errors"
 )
 
 type shhRequest struct {
@@ -198,7 +199,14 @@ type shhPostParam struct {
 	PowTime   int     `json:"powTime"`
 }
 
+// error response {"jsonrpc":"2.0","id":633,"error":{"code":-32000,"message":"message rejected, PoW too low"}}
+type sshPostError struct {
+	Code    float64 `json:"code"`
+	Message string  `json:"message"`
+}
+
 type shhPostResponse struct {
+	Error *sshPostError `json:"error"`
 }
 
 func shhPostRequest(sdk *SDK, params []*shhPostParam) (res *shhPostResponse, err error) {
@@ -217,7 +225,14 @@ func shhPostRequest(sdk *SDK, params []*shhPostParam) (res *shhPostResponse, err
 		return
 	}
 
-	sdk.call(string(body), &res)
+	err = sdk.call(string(body), &res)
+	if err != nil {
+		return res, err
+	}
+
+	if res.Error != nil {
+		return res, errors.New(res.Error.Message)
+	}
 
 	return
 }

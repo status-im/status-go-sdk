@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"log"
 	"time"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 // Channel : ...
@@ -49,35 +47,37 @@ func (c *Channel) Close() {
 // metadata.
 // When one of the contacts recovers his account, a NewContactKey message is
 // sent as well to change the symmetric key and topic.
-func (c *Channel) NewContactKeyRequest(username string) {
+func (c *Channel) NewContactKeyRequest(username string) error {
 	format := `["%s",["%s","%s","%s","%s"]]]`
 	contactRequest := fmt.Sprintf(format, ContactRequestType, username, "", "", "")
 
 	format = `["%s",["%s","%s",%s]`
 	msg := fmt.Sprintf(format, NewContactKeyType, c.conn.address, c.topicID, contactRequest)
 
-	c.SendPostRawMsg(msg)
+	return c.SendPostRawMsg(msg)
 }
 
 // ContactRequest wrapped in a NewContactKey message when initiating a contact request.
-func (c *Channel) ContactRequest(username, image string) {
+func (c *Channel) ContactRequest(username, image string) error {
 	format := `["%s",["%s","%s","%s","%s"]]]`
 	msg := fmt.Sprintf(format, ContactRequestType, username, image, c.conn.address, "")
-	c.SendPostRawMsg(msg)
+
+	return c.SendPostRawMsg(msg)
 }
 
 // ConfirmedContactRequest this is the message that will be sent when the
 // contact accepts the contact request. It will be sent on the topic that
 // was provided in the NewContactKey message and use the sym-key.
 // Both users will therefore have the same filter.
-func (c *Channel) ConfirmedContactRequest(username, image string) {
+func (c *Channel) ConfirmedContactRequest(username, image string) error {
 	format := `["%s",["%s","%s","%s","%s"]]`
 	msg := fmt.Sprintf(format, ConfirmedContactRequestType, username, image, c.conn.address, "")
-	c.SendPostRawMsg(msg)
+
+	return c.SendPostRawMsg(msg)
 }
 
 // Publish a message with the given body on the current channel
-func (c *Channel) Publish(body string) {
+func (c *Channel) Publish(body string) error {
 	visibility := "~:public-group-user-message"
 	if c.visibility != "" {
 		visibility = c.visibility
@@ -88,7 +88,8 @@ func (c *Channel) Publish(body string) {
 
 	msg := fmt.Sprintf(format, StandardMessageType, body, visibility, now*100, now*100)
 	println("[ SENDING ] : " + msg)
-	c.SendPostRawMsg(msg)
+
+	return c.SendPostRawMsg(msg)
 }
 
 // SeenRequest sent when a user sees a message (opens the chat and loads the
@@ -101,16 +102,16 @@ func (c *Channel) SeenRequest(ids []string) error {
 	}
 
 	msg := fmt.Sprintf(format, SeenType, body)
-	c.SendPostRawMsg(msg)
 
-	return nil
+	return c.SendPostRawMsg(msg)
 }
 
 // ContactUpdateRequest sent when the user changes his name or profile-image.
-func (c *Channel) ContactUpdateRequest(username, image string) {
+func (c *Channel) ContactUpdateRequest(username, image string) error {
 	format := `["%s",["%s","%s"]]`
 	msg := fmt.Sprintf(format, ContactUpdateType, username, image)
-	c.SendPostRawMsg(msg)
+
+	return c.SendPostRawMsg(msg)
 }
 
 // SendPostRawMsg sends a shh_post message with the given body.
@@ -125,24 +126,22 @@ func (c *Channel) SendPostRawMsg(body string) error {
 		PowTime:   1,
 	}
 
-	res, err := shhPostRequest(c.conn, []*shhPostParam{&param})
+	_, err := shhPostRequest(c.conn, []*shhPostParam{&param})
 	if err != nil {
-		return err
+		log.Println(err.Error())
 	}
 
-	// TODO(adriacidre) we should check if there are any errors
-	spew.Dump(res)
-
-	return nil
+	return err
 }
 
 // PNBroadcastAvailabilityRequest makes a request used by push notification
 // servers to broadcast its availability, this request is exposing current
 // push notification server Public Key.
-func (c *Channel) PNBroadcastAvailabilityRequest() {
+func (c *Channel) PNBroadcastAvailabilityRequest() error {
 	format := `["%s",["%s"]]`
 	msg := fmt.Sprintf(format, PNBroadcastAvailabilityType, c.conn.pubkey)
-	c.SendPostRawMsg(msg)
+
+	return c.SendPostRawMsg(msg)
 }
 
 // PNRegistrationRequest request sent by clients wanting to be registered on
@@ -151,19 +150,21 @@ func (c *Channel) PNBroadcastAvailabilityRequest() {
 // communications happen through this channel.
 // Additionally a device token will identify the device on the push notification
 // provider.
-func (c *Channel) PNRegistrationRequest(symkey, topic, deviceToken string, slotAvailabilityRatio float32) {
+func (c *Channel) PNRegistrationRequest(symkey, topic, deviceToken string, slotAvailabilityRatio float32) error {
 	format := `["%s",["%s","%s","%s"]]]`
 	msg := fmt.Sprintf(format, PNRegistrationType, symkey, topic, deviceToken, slotAvailabilityRatio)
-	c.SendPostRawMsg(msg)
+
+	return c.SendPostRawMsg(msg)
 }
 
 // PNRegistrationConfirmationRequest request sent by the push notification
 // server to let a client know what's the pubkey associated with its registered
 // token.
-func (c *Channel) PNRegistrationConfirmationRequest(pubkey string) {
+func (c *Channel) PNRegistrationConfirmationRequest(pubkey string) error {
 	format := `["%s",["%s"]]]`
 	msg := fmt.Sprintf(format, PNRegistrationConfirmationType, pubkey)
-	c.SendPostRawMsg(msg)
+
+	return c.SendPostRawMsg(msg)
 }
 
 func (c *Channel) removeSubscription(sub *Subscription) {
