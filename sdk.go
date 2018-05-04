@@ -6,6 +6,11 @@ import (
 	"log"
 )
 
+// RPCClient is a client to manage all rpc calls
+type RPCClient interface {
+	Call(request interface{}) (response interface{}, err error)
+}
+
 // SDK is a set of tools to interact with status node
 type SDK struct {
 	RPCClient  RPCClient
@@ -18,9 +23,9 @@ type SDK struct {
 }
 
 // New creates a default SDK object
-func New(address string) *SDK {
+func New(c RPCClient) *SDK {
 	return &SDK{
-		// RPCClient:  newRPC(address),
+		RPCClient:  c,
 		minimumPoW: 0.001,
 	}
 }
