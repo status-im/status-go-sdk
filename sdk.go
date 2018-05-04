@@ -10,6 +10,8 @@ import (
 type SDK struct {
 	RPCClient  RPCClient
 	address    string
+	pubkey     string
+	mnemonic   string
 	userName   string
 	channels   []*Channel
 	minimumPoW float64
@@ -47,6 +49,9 @@ func (c *SDK) Signup(pwd string) (addr string, pubkey string, mnemonic string, e
 	if err != nil {
 		return "", "", "", err
 	}
+	c.address = res.Result.Address
+	c.pubkey = res.Result.Pubkey
+	c.mnemonic = res.Result.Mnemonic
 
 	return res.Result.Address, res.Result.Pubkey, res.Result.Mnemonic, err
 }
