@@ -66,18 +66,6 @@ func (c *SDK) SignupAndLogin(password string) (addr string, pubkey string, mnemo
 	return
 }
 
-/*
-// Join a specific channel by name
-func (c *SDK) Join(channelName string) (*Channel, error) {
-	ch, err := c.joinPublicChannel(channelName)
-	if err != nil {
-		c.channels = append(c.channels, ch)
-	}
-
-	return ch, err
-}
-*/
-
 // NewMessageFilterResponse NewMessageFilter json response
 type NewMessageFilterResponse struct {
 	Result string `json:"result"`
@@ -89,14 +77,19 @@ func (c *SDK) JoinPublicChannel(channelName string) (*Channel, error) {
 	if err != nil {
 		return nil, err
 	}
-	key := symkeyResponse.Key
+	symKey := symkeyResponse.Key
 
 	topicID, err := c.calculatePublicChannelTopicID(channelName, symkeyResponse.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	newMessageFilterResponse, err := newShhMessageFilterFormatRequest(c, []string{topicID}, key)
+	return c.Join(channelName, topicID, symKey)
+}
+
+// Join joins a status channel
+func (c *SDK) Join(channelName, topicID, symKey string) (*Channel, error) {
+	newMessageFilterResponse, err := newShhMessageFilterFormatRequest(c, []string{topicID}, symKey)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +101,7 @@ func (c *SDK) JoinPublicChannel(channelName string) (*Channel, error) {
 		name:       channelName,
 		filterID:   filterID,
 		topicID:    topicID,
-		channelKey: key,
+		channelKey: symKey,
 	}
 	c.channels = append(c.channels, ch)
 
