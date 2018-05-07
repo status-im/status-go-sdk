@@ -177,6 +177,11 @@ func (c *Channel) removeSubscription(sub *Subscription) {
 	c.subscriptions = subs
 }
 
+// PubKey return the channel's associated publike key
+func (c *Channel) PubKey() string {
+	return c.account.PubKey
+}
+
 func (c *Channel) pollMessages() (msg *Msg) {
 	res, err := shhGetFilterMessagesRequest(c.account.conn, []string{c.filterID})
 	if err != nil {
@@ -189,6 +194,7 @@ func (c *Channel) pollMessages() (msg *Msg) {
 		for _, u := range vv {
 			msg, err = messageFromEnvelope(u)
 			if err == nil && supportedMessage(msg.Type) {
+				msg.Channel = c
 				msg.ChannelName = c.name
 				return
 			}
