@@ -25,13 +25,12 @@ func (a *Account) CreatePrivateChannel(name, password string) (*Channel, error) 
 }
 
 func (a *Account) createAndJoin(name, password string) (*Channel, error) {
-	symkeyResponse, err := shhGenerateSymKeyFromPasswordRequest(a.conn, []string{password})
+	symKey, err := shhGenerateSymKeyFromPasswordRequest(a.conn, password)
 	if err != nil {
 		return nil, err
 	}
-	symKey := symkeyResponse.Key
 
-	topicID, err := a.calculatePublicChannelTopicID(name, symkeyResponse.ID)
+	topicID, err := a.calculatePublicChannelTopicID(name)
 	if err != nil {
 		return nil, err
 	}
@@ -41,12 +40,10 @@ func (a *Account) createAndJoin(name, password string) (*Channel, error) {
 
 // Join joins a status channel
 func (a *Account) Join(channelName, topicID, symKey string) (*Channel, error) {
-	newMessageFilterResponse, err := newShhMessageFilterFormatRequest(a.conn, []string{topicID}, symKey)
+	filterID, err := newShhMessageFilterFormatRequest(a.conn, []string{topicID}, symKey)
 	if err != nil {
 		return nil, err
 	}
-
-	filterID := newMessageFilterResponse.FilterID
 
 	ch := &Channel{
 		account:    a,
@@ -60,13 +57,13 @@ func (a *Account) Join(channelName, topicID, symKey string) (*Channel, error) {
 	return ch, nil
 }
 
-func (a *Account) calculatePublicChannelTopicID(name string, symkey int) (topicID string, err error) {
+func (a *Account) calculatePublicChannelTopicID(name string) (topicID string, err error) {
 	p := "0x" + hex.EncodeToString([]byte(name))
-	web3ShaResponse, err := web3Sha3Request(a.conn, symkey, []string{p})
+	hash, err := web3Sha3Request(a.conn, p)
 	if err != nil {
 		return
 	}
-	topicID = web3ShaResponse.Result[0:10]
+	topicID = hash[0:10]
 
 	return
 }

@@ -1,13 +1,12 @@
 package sdk
 
 import (
-	"encoding/json"
 	"log"
 )
 
 // RPCClient is a client to manage all rpc calls
 type RPCClient interface {
-	Call(request interface{}) (response interface{}, err error)
+	Call(req *Request, res interface{}) error
 }
 
 // SDK is a set of tools to interact with status node
@@ -33,7 +32,7 @@ func (c *SDK) Login(addr, pwd string) (a *Account, err error) {
 	}
 	return &Account{
 		conn:    c,
-		Address: res.Result.AddressKeyID,
+		Address: res.AddressKeyID,
 	}, err
 }
 
@@ -45,9 +44,9 @@ func (c *SDK) Signup(pwd string) (a *Account, err error) {
 	}
 	return &Account{
 		conn:     c,
-		Address:  res.Result.Address,
-		PubKey:   res.Result.Pubkey,
-		Mnemonic: res.Result.Mnemonic,
+		Address:  res.Address,
+		PubKey:   res.Pubkey,
+		Mnemonic: res.Mnemonic,
 	}, err
 
 }
@@ -63,18 +62,22 @@ func (c *SDK) SignupAndLogin(password string) (a *Account, err error) {
 	return
 }
 
+type Request struct {
+	Method string      `json:"method"`
+	Params interface{} `json:"params"`
+}
+
 // NewMessageFilterResponse NewMessageFilter json response
 type NewMessageFilterResponse struct {
 	Result string `json:"result"`
 }
 
-func (c *SDK) call(cmd string, res interface{}) error {
-	log.Println("[ REQUEST ] : " + cmd)
-	body, err := c.RPCClient.Call(cmd)
-	if err != nil {
-		return err
+func (c *SDK) call(method string, params interface{}, result interface{}) error {
+	log.Println("[ REQUEST ] : " + method)
+	req := &Request{
+		Method: method,
+		Params: params,
 	}
-	log.Println("[ RESPONSE ] : " + body.(string))
 
-	return json.Unmarshal([]byte(body.(string)), &res)
+	return c.RPCClient.Call(req, result)
 }

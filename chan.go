@@ -83,10 +83,10 @@ func (c *Channel) Publish(body string) error {
 		visibility = c.visibility
 	}
 
-	now := time.Now().Unix()
+	now := time.Now().Unix() * 1000
 	format := `["%s",["%s","text/plain","%s",%d,%d]]`
 
-	msg := fmt.Sprintf(format, StandardMessageType, body, visibility, now*100, now*100)
+	msg := fmt.Sprintf(format, StandardMessageType, body, visibility, now*100, now)
 	println("[ SENDING ] : " + msg)
 
 	return c.SendPostRawMsg(msg)
@@ -116,7 +116,7 @@ func (c *Channel) ContactUpdateRequest(username, image string) error {
 
 // SendPostRawMsg sends a shh_post message with the given body.
 func (c *Channel) SendPostRawMsg(body string) error {
-	param := shhPostParam{
+	msg := Message{
 		Signature: c.account.Address,
 		SymKeyID:  c.ChannelKey,
 		Payload:   rawrChatMessage(body),
@@ -126,7 +126,7 @@ func (c *Channel) SendPostRawMsg(body string) error {
 		PowTime:   1,
 	}
 
-	_, err := shhPostRequest(c.account.conn, []*shhPostParam{&param})
+	_, err := shhPostRequest(c.account.conn, &msg)
 	if err != nil {
 		log.Println(err.Error())
 	}
@@ -183,13 +183,13 @@ func (c *Channel) PubKey() string {
 }
 
 func (c *Channel) pollMessages() (msg *Msg) {
-	res, err := shhGetFilterMessagesRequest(c.account.conn, []string{c.filterID})
+	res, err := shhGetFilterMessagesRequest(c.account.conn, c.filterID)
 	if err != nil {
 		log.Fatalf("Error when sending request to server: %s", err)
 		return
 	}
 
-	switch vv := res.Result.(type) {
+	switch vv := res.(type) {
 	case []interface{}:
 		for _, u := range vv {
 			msg, err = messageFromEnvelope(u)
@@ -206,7 +206,7 @@ func (c *Channel) pollMessages() (msg *Msg) {
 			return nil
 		}
 	default:
-		log.Println(res.Result, "is of a type I don't know how to handle")
+		log.Println(res, "is of a type I don't know how to handle")
 	}
 	return
 }

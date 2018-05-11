@@ -2,30 +2,46 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"time"
 
+	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/status-im/status-go-sdk"
 )
 
 func main() {
-	client := sdk.New("localhost:30303")
+	rpcClient, err := rpc.Dial("http://localhost:8545")
+	checkErr(err)
 
-	addr, _, _, err := client.Signup("password")
+	remoteClient := &remoteClient{rpcClient}
+	client := sdk.New(remoteClient)
+
+	a, err := client.SignupAndLogin("password")
+	checkErr(err)
+
+	ch, err := a.JoinPublicChannel("supu")
 	if err != nil {
-		return
+		checkErr(err)
 	}
 
-	if err := client.Login(addr, "password"); err != nil {
-		panic(err)
-	}
+	fmt.Printf("%+v\n", ch)
 
-	ch, err := client.JoinPublicChannel("supu")
-	if err != nil {
-		panic("Couldn't connect to status")
-	}
-
-	for range time.Tick(10 * time.Second) {
+	for range time.Tick(3 * time.Second) {
 		message := fmt.Sprintf("PING : %d", time.Now().Unix())
 		_ = ch.Publish(message)
+	}
+}
+
+type remoteClient struct {
+	c *rpc.Client
+}
+
+func (rc *remoteClient) Call(req *sdk.Request, res interface{}) error {
+	return rc.c.Call(res, req.Method, req.Params)
+}
+
+func checkErr(err error) {
+	if err != nil {
+		log.Fatal(err)
 	}
 }

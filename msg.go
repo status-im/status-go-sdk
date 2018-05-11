@@ -53,6 +53,7 @@ func supportedMessage(msgType string) bool {
 // Msg is a structure used by Subscribers and Publish().
 type Msg struct {
 	From        string   `json:"from"`
+	PubKey      string   `json:"sig"`
 	ChannelName string   `json:"channel"`
 	Channel     *Channel `json:"-"`
 	Raw         string   `json:"-"`
@@ -77,7 +78,11 @@ func unrawrChatMessage(message string) ([]byte, error) {
 
 func messageFromEnvelope(u interface{}) (msg *Msg, err error) {
 	payload := u.(map[string]interface{})["payload"]
-	return messageFromPayload(payload.(string))
+	msg, err = messageFromPayload(payload.(string))
+	if pubkey, ok := u.(map[string]interface{})["sig"]; ok {
+		msg.PubKey = pubkey.(string)
+	}
+	return
 }
 
 func messageFromPayload(payload string) (*Msg, error) {

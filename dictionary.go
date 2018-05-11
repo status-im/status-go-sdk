@@ -1,10 +1,5 @@
 package sdk
 
-import (
-	"encoding/json"
-	"errors"
-)
-
 type shhRequest struct {
 	ID      int           `json:"id"`
 	JSONRPC string        `json:"jsonrpc"`
@@ -17,25 +12,10 @@ type generateSymKeyFromPasswordResponse struct {
 	ID  int    `json:"id"`
 }
 
-func shhGenerateSymKeyFromPasswordRequest(sdk *SDK, params []string) (res *generateSymKeyFromPasswordResponse, err error) {
+func shhGenerateSymKeyFromPasswordRequest(sdk *SDK, password string) (string, error) {
 	// `{"jsonrpc":"2.0","id":2950,"method":"shh_generateSymKeyFromPassword","params":["%s"]}`
-	req := shhRequest{
-		ID:      2950,
-		JSONRPC: "2.0",
-		Method:  "shh_generateSymKeyFromPassword",
-	}
-	for _, p := range params {
-		req.Params = append(req.Params, p)
-	}
-
-	body, err := json.Marshal(req)
-	if err != nil {
-		return
-	}
-
-	sdk.call(string(body), &res)
-
-	return
+	var resp string
+	return resp, sdk.call("shh_generateSymKeyFromPassword", password, &resp)
 }
 
 type shhFilterFormatParam struct {
@@ -49,53 +29,27 @@ type newMessageFilterResponse struct {
 	FilterID string `json:"result"`
 }
 
-func newShhMessageFilterFormatRequest(sdk *SDK, topics []string, symKey string) (res newMessageFilterResponse, err error) {
+func newShhMessageFilterFormatRequest(sdk *SDK, topics []string, symKey string) (string, error) {
 	// `{"jsonrpc":"2.0","id":2,"method":"shh_newMessageFilter","params":[{"allowP2P":true,"topics":["%s"],"type":"sym","symKeyID":"%s"}]}`
-	req := shhRequest{
-		ID:      2,
-		JSONRPC: "2.0",
-		Method:  "shh_newMessageFilter",
-	}
-	req.Params = append(req.Params, &shhFilterFormatParam{
+	var res string
+	params := &shhFilterFormatParam{
 		AllowP2P: true,
 		Topics:   topics,
 		Type:     "sym",
 		SymKeyID: symKey,
-	})
-
-	body, err := json.Marshal(req)
-	if err != nil {
-		return
 	}
 
-	sdk.call(string(body), &res)
-
-	return
+	return res, sdk.call("shh_newMessageFilter", params, &res)
 }
 
 type web3ShaResponse struct {
 	Result string `json:"result"`
 }
 
-func web3Sha3Request(sdk *SDK, id int, params []string) (res *web3ShaResponse, err error) {
+func web3Sha3Request(sdk *SDK, data string) (string, error) {
 	// `{"jsonrpc":"2.0","method":"web3_sha3","params":["%s"],"id":%d}`
-	req := shhRequest{
-		ID:      id,
-		JSONRPC: "2.0",
-		Method:  "web3_sha3",
-	}
-	for _, p := range params {
-		req.Params = append(req.Params, p)
-	}
-
-	body, err := json.Marshal(req)
-	if err != nil {
-		return
-	}
-
-	sdk.call(string(body), &res)
-
-	return
+	var res string
+	return res, sdk.call("web3_sha3", data, &res)
 }
 
 type statusLoginParam struct {
@@ -104,31 +58,19 @@ type statusLoginParam struct {
 }
 
 type loginResponse struct {
-	Result struct {
-		AddressKeyID string `json:"address_key_id"`
-	} `json:"result"`
+	AddressKeyID string `json:"address_key_id"`
 }
 
-func statusLoginRequest(sdk *SDK, address, password string) (res loginResponse, err error) {
+func statusLoginRequest(sdk *SDK, address, password string) (*loginResponse, error) {
 	// `{"jsonrpc":"2.0","method":"status_login","params":[{"address":"%s","password":"%s"}]}`
-	req := shhRequest{
-		JSONRPC: "2.0",
-		Method:  "status_login",
-	}
+	var res loginResponse
 
-	req.Params = append(req.Params, &statusLoginParam{
+	params := &statusLoginParam{
 		Address:  address,
 		Password: password,
-	})
-
-	body, err := json.Marshal(req)
-	if err != nil {
-		return
 	}
 
-	sdk.call(string(body), &res)
-
-	return
+	return &res, sdk.call("status_login", params, &res)
 }
 
 type statusSignupParam struct {
@@ -136,67 +78,41 @@ type statusSignupParam struct {
 }
 
 type signupResponse struct {
-	Result struct {
-		Address  string `json:"address"`
-		Pubkey   string `json:"pubkey"`
-		Mnemonic string `json:"mnemonic"`
-	} `json:"result"`
+	Address  string `json:"address"`
+	Pubkey   string `json:"pubkey"`
+	Mnemonic string `json:"mnemonic"`
 }
 
-func statusSignupRequest(sdk *SDK, password string) (res signupResponse, err error) {
+func statusSignupRequest(sdk *SDK, password string) (*signupResponse, error) {
 	// `{"jsonrpc":"2.0","method":"status_signup","params":[{"password":"%s"}]}`
-	req := shhRequest{
-		JSONRPC: "2.0",
-		Method:  "status_signup",
-	}
+	var res signupResponse
 
-	req.Params = append(req.Params, &statusSignupParam{
+	params := &statusSignupParam{
 		Password: password,
-	})
-
-	body, err := json.Marshal(req)
-	if err != nil {
-		return
 	}
 
-	sdk.call(string(body), &res)
-
-	return
+	return &res, sdk.call("status_signup", params, &res)
 }
 
 type getFilterMessagesResponse struct {
 	Result interface{} `json:"result"`
 }
 
-func shhGetFilterMessagesRequest(sdk *SDK, filters []string) (res *getFilterMessagesResponse, err error) {
+func shhGetFilterMessagesRequest(sdk *SDK, filter string) (interface{}, error) {
 	// `{"jsonrpc":"2.0","id":2968,"method":"shh_getFilterMessages","params":["%s"]}`
-	req := shhRequest{
-		ID:      2968,
-		JSONRPC: "2.0",
-		Method:  "shh_getFilterMessages",
-	}
-	for _, f := range filters {
-		req.Params = append(req.Params, f)
-	}
+	var res interface{}
 
-	body, err := json.Marshal(req)
-	if err != nil {
-		return
-	}
-
-	sdk.call(string(body), &res)
-
-	return
+	return res, sdk.call("shh_getFilterMessages", filter, &res)
 }
 
-type shhPostParam struct {
+type Message struct {
 	Signature string  `json:"sig"`
 	SymKeyID  string  `json:"symKeyID"`
 	Payload   string  `json:"payload"`
 	Topic     string  `json:"topic"`
-	TTL       int     `json:"ttl"`
+	TTL       uint32  `json:"ttl"`
 	PowTarget float64 `json:"powTarget"`
-	PowTime   int     `json:"powTime"`
+	PowTime   uint32  `json:"powTime"`
 }
 
 // error response {"jsonrpc":"2.0","id":633,"error":{"code":-32000,"message":"message rejected, PoW too low"}}
@@ -209,30 +125,7 @@ type shhPostResponse struct {
 	Error *sshPostError `json:"error"`
 }
 
-func shhPostRequest(sdk *SDK, params []*shhPostParam) (res *shhPostResponse, err error) {
-	// `{"jsonrpc":"2.0","id":633,"method":"shh_post","params":[{"sig":"%s","symKeyID":"%s","payload":"%s","topic":"%s","ttl":10,"powTarget":%g,"powTime":1}]}`
-	req := shhRequest{
-		ID:      633,
-		JSONRPC: "2.0",
-		Method:  "shh_post",
-	}
-	for _, p := range params {
-		req.Params = append(req.Params, p)
-	}
-
-	body, err := json.Marshal(req)
-	if err != nil {
-		return
-	}
-
-	err = sdk.call(string(body), &res)
-	if err != nil {
-		return res, err
-	}
-
-	if res.Error != nil {
-		return res, errors.New(res.Error.Message)
-	}
-
-	return
+func shhPostRequest(sdk *SDK, msg *Message) (string, error) {
+	var res string
+	return res, sdk.call("shh_post", msg, &res)
 }

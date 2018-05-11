@@ -7,35 +7,45 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/status-im/status-go-sdk"
 )
 
+type remoteClient struct {
+	c *rpc.Client
+}
+
+func (rc *remoteClient) Call(req *sdk.Request, res interface{}) error {
+	return rc.c.Call(res, req.Method, req.Params)
+}
+
+func checkErr(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func main() {
-	client := sdk.New("localhost:30303")
+	rpcClient, err := rpc.Dial("http://localhost:8545")
+	checkErr(err)
 
-	addr, _, _, err := client.Signup("password")
-	if err != nil {
-		return
-	}
+	remoteClient := &remoteClient{rpcClient}
+	client := sdk.New(remoteClient)
 
-	if err := client.Login(addr, "password"); err != nil {
-		panic(err)
-	}
+	a, err := client.SignupAndLogin("password")
+	checkErr(err)
 
-	ch, err := client.JoinPublicChannel("supu")
-	if err != nil {
-		panic("Couldn't connect to status")
-	}
+	ch, err := a.JoinPublicChannel("supu")
+	checkErr(err)
 
 	_, _ = ch.Subscribe(func(m *sdk.Msg) {
-		log.Println("Message from ", m.From, " with body: ", m.Text)
+		log.Println("Message from ", m.From, " with body: ", m.Raw)
 
-		if strings.Contains(m.Text, "PING :") {
+		if strings.Contains(m.Raw, "PING :") {
 			time.Sleep(5 * time.Second)
 			message := fmt.Sprintf("PONG : %d", time.Now().Unix())
 			_ = ch.Publish(message)
 		}
-
 	})
 
 	runtime.Goexit()
