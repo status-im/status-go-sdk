@@ -101,10 +101,9 @@ func main() {
   // Here we create a new remote client against our running statusd
 	rpcClient, err := rpc.Dial("http://localhost:8545")
 	checkErr(err)
-	remoteClient := &remoteClient{rpcClient}
 
   // Setting up a new sdk client
-	client := sdk.New(remoteClient)
+	client := sdk.New(rpcClient)
 
   // We signup and login as a new account
 	a, err := client.SignupAndLogin("password")
@@ -119,15 +118,6 @@ func main() {
 		message := fmt.Sprintf("PING : %d", time.Now().Unix())
 		_ = ch.Publish(message)
 	}
-}
-
-// This is the remote client we will use to
-type remoteClient struct {
-	c *rpc.Client
-}
-
-func (rc *remoteClient) Call(req *sdk.Request, res interface{}) error {
-	return rc.c.Call(res, req.Method, req.Params)
 }
 
 func checkErr(err error) {

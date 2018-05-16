@@ -1,12 +1,8 @@
 package sdk
 
-import (
-	"log"
-)
-
 // RPCClient is a client to manage all rpc calls
 type RPCClient interface {
-	Call(req *Request, res interface{}) error
+	Call(result interface{}, method string, args ...interface{}) error
 }
 
 // SDK is a set of tools to interact with status node
@@ -70,14 +66,4 @@ type Request struct {
 // NewMessageFilterResponse NewMessageFilter json response
 type NewMessageFilterResponse struct {
 	Result string `json:"result"`
-}
-
-func (c *SDK) call(method string, params interface{}, result interface{}) error {
-	log.Println("[ REQUEST ] : " + method)
-	req := &Request{
-		Method: method,
-		Params: params,
-	}
-
-	return c.RPCClient.Call(req, result)
 }

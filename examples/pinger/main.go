@@ -13,8 +13,7 @@ func main() {
 	rpcClient, err := rpc.Dial("http://localhost:8545")
 	checkErr(err)
 
-	remoteClient := &remoteClient{rpcClient}
-	client := sdk.New(remoteClient)
+	client := sdk.New(rpcClient)
 
 	a, err := client.SignupAndLogin("password")
 	checkErr(err)
@@ -30,14 +29,6 @@ func main() {
 		message := fmt.Sprintf("PING : %d", time.Now().Unix())
 		_ = ch.Publish(message)
 	}
-}
-
-type remoteClient struct {
-	c *rpc.Client
-}
-
-func (rc *remoteClient) Call(req *sdk.Request, res interface{}) error {
-	return rc.c.Call(res, req.Method, req.Params)
 }
 
 func checkErr(err error) {

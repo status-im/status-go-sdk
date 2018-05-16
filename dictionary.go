@@ -15,7 +15,7 @@ type generateSymKeyFromPasswordResponse struct {
 func shhGenerateSymKeyFromPasswordRequest(sdk *SDK, password string) (string, error) {
 	// `{"jsonrpc":"2.0","id":2950,"method":"shh_generateSymKeyFromPassword","params":["%s"]}`
 	var resp string
-	return resp, sdk.call("shh_generateSymKeyFromPassword", password, &resp)
+	return resp, sdk.RPCClient.Call(&resp, "shh_generateSymKeyFromPassword", password)
 }
 
 type shhFilterFormatParam struct {
@@ -39,7 +39,7 @@ func newShhMessageFilterFormatRequest(sdk *SDK, topics []string, symKey string) 
 		SymKeyID: symKey,
 	}
 
-	return res, sdk.call("shh_newMessageFilter", params, &res)
+	return res, sdk.RPCClient.Call(&res, "shh_newMessageFilter", params)
 }
 
 type web3ShaResponse struct {
@@ -49,7 +49,7 @@ type web3ShaResponse struct {
 func web3Sha3Request(sdk *SDK, data string) (string, error) {
 	// `{"jsonrpc":"2.0","method":"web3_sha3","params":["%s"],"id":%d}`
 	var res string
-	return res, sdk.call("web3_sha3", data, &res)
+	return res, sdk.RPCClient.Call(&res, "web3_sha3", data)
 }
 
 type statusLoginParam struct {
@@ -70,7 +70,7 @@ func statusLoginRequest(sdk *SDK, address, password string) (*loginResponse, err
 		Password: password,
 	}
 
-	return &res, sdk.call("status_login", params, &res)
+	return &res, sdk.RPCClient.Call(&res, "status_login", params)
 }
 
 type statusSignupParam struct {
@@ -91,7 +91,7 @@ func statusSignupRequest(sdk *SDK, password string) (*signupResponse, error) {
 		Password: password,
 	}
 
-	return &res, sdk.call("status_signup", params, &res)
+	return &res, sdk.RPCClient.Call(&res, "status_signup", params)
 }
 
 type getFilterMessagesResponse struct {
@@ -102,7 +102,7 @@ func shhGetFilterMessagesRequest(sdk *SDK, filter string) (interface{}, error) {
 	// `{"jsonrpc":"2.0","id":2968,"method":"shh_getFilterMessages","params":["%s"]}`
 	var res interface{}
 
-	return res, sdk.call("shh_getFilterMessages", filter, &res)
+	return res, sdk.RPCClient.Call(&res, "shh_getFilterMessages", filter)
 }
 
 type Message struct {
@@ -127,5 +127,5 @@ type shhPostResponse struct {
 
 func shhPostRequest(sdk *SDK, msg *Message) (string, error) {
 	var res string
-	return res, sdk.call("shh_post", msg, &res)
+	return res, sdk.RPCClient.Call(&res, "shh_post", msg)
 }
