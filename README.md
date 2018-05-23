@@ -58,7 +58,7 @@ go get github.com/status-im/status-go-sdk
 ```
 However, and to run some examples you may also want to install `go-ethereum/rpc` with
 ```
-go get go get github.com/ethereum/go-ethereum/rpc
+go get github.com/ethereum/go-ethereum/rpc
 ```
 
 ## API Reference
