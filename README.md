@@ -10,7 +10,7 @@ This library was initially created to have a low-dependency way to interact with
 
 ## Build status
 
-[![Build Status](https://travis-ci.org/akashnimare/foco.svg?branch=master)](https://travis-ci.org/akashnimare/foco)
+TBD
 
 ## Features
 This project is under heavy development process, here is a list of supported features:
