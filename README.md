@@ -56,16 +56,24 @@ status-go-sdk is a lightweight dependency package, that means we try to avoid as
 ```
 go get github.com/status-im/status-go-sdk
 ```
-However, and to run some examples you may also want to install `go-ethereum/rpc` with
+However, and to run some examples or  you may also want to install `go-ethereum/rpc` with
 ```
 go get github.com/ethereum/go-ethereum/rpc
+```
+If you are developing, run:
+```
+make dev-deps
 ```
 
 ## API Reference
 TBD
 
 ## Tests
-TBD
+status-go-sdk currently runs tests under
+```
+make test
+```
+End-to-end tests are still in the works
 
 ## How to use?
 `status-go-sdk` relies on a running instance of `statusd`, we can quickly configure it by [following its official instructions](https://github.com/status-im/status-go#build), but you can use this as a quick-start:

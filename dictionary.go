@@ -69,7 +69,6 @@ func statusLoginRequest(sdk *SDK, address, password string) (*loginResponse, err
 		Address:  address,
 		Password: password,
 	}
-
 	return &res, sdk.RPCClient.Call(&res, "status_login", params)
 }
 
