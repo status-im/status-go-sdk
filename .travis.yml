@@ -1,0 +1,15 @@
+notifications:
+  email: false
+language: go
+go:
+- 1.10.x
+sudo: false
+install: make setup
+jobs:
+  include:
+  - stage: Lint
+    script:
+      - make lint
+  - stage: Unit and Integration Tests
+    script:
+      - make test

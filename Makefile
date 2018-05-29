@@ -1,3 +1,8 @@
+setup:
+	make lint-install
+	make dev-deps
+	make mock
+
 lint-install:
 	go get -u github.com/alecthomas/gometalinter
 	gometalinter --install
