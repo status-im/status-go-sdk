@@ -17,8 +17,9 @@ jobs:
     #### expecting it in the form of
     ####   /go/src/github.com/circleci/go-tool
     ####   /go/src/bitbucket.org/circleci/go-tool
-    working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
+    working_directory: /go/src/github.com/status-im/status-go-sdk
     steps:
       - checkout
-      - run: make lint-install
+      - run: make setup
       - run: make lint
+      - run: make test
