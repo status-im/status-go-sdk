@@ -30,6 +30,7 @@ func main() {
 	client := sdk.New(rpcClient)
 
 	a, err := client.SignupAndLogin(pwd)
+	checkErr(err)
 
 	ch, err := a.JoinPublicChannel("mitsuku")
 	checkErr(err)
@@ -44,7 +45,8 @@ func main() {
 		properties := m.Properties.(*sdk.PublishMsg)
 
 		// Print the response.
-		ch.Publish(askMitsuku(properties.Text))
+		err := ch.Publish(askMitsuku(properties.Text))
+		checkErr(err)
 
 	})
 	runtime.Goexit()

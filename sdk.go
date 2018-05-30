@@ -8,7 +8,6 @@ type RPCClient interface {
 // SDK is a set of tools to interact with status node
 type SDK struct {
 	RPCClient  RPCClient
-	accounts   []*Account
 	minimumPoW float64
 }
 
@@ -58,6 +57,7 @@ func (c *SDK) SignupAndLogin(password string) (a *Account, err error) {
 	return
 }
 
+// Request json request.
 type Request struct {
 	Method string      `json:"method"`
 	Params interface{} `json:"params"`

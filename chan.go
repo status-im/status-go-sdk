@@ -203,8 +203,8 @@ func (c *Channel) pollMessages() (msg *Msg) {
 			} else {
 				log.Println("[ ERROR ]", "Invalid message type", msg.Type)
 			}
-			return nil
 		}
+		return nil
 	default:
 		log.Println(res, "is of a type I don't know how to handle")
 	}
