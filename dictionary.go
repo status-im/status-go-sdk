@@ -1,17 +1,5 @@
 package sdk
 
-type shhRequest struct {
-	ID      int           `json:"id"`
-	JSONRPC string        `json:"jsonrpc"`
-	Method  string        `json:"method"`
-	Params  []interface{} `json:"params"`
-}
-
-type generateSymKeyFromPasswordResponse struct {
-	Key string `json:"result"`
-	ID  int    `json:"id"`
-}
-
 func shhGenerateSymKeyFromPasswordRequest(sdk *SDK, password string) (string, error) {
 	// `{"jsonrpc":"2.0","id":2950,"method":"shh_generateSymKeyFromPassword","params":["%s"]}`
 	var resp string
@@ -25,10 +13,6 @@ type shhFilterFormatParam struct {
 	SymKeyID string   `json:"symKeyID"`
 }
 
-type newMessageFilterResponse struct {
-	FilterID string `json:"result"`
-}
-
 func newShhMessageFilterFormatRequest(sdk *SDK, topics []string, symKey string) (string, error) {
 	// `{"jsonrpc":"2.0","id":2,"method":"shh_newMessageFilter","params":[{"allowP2P":true,"topics":["%s"],"type":"sym","symKeyID":"%s"}]}`
 	var res string
@@ -40,10 +24,6 @@ func newShhMessageFilterFormatRequest(sdk *SDK, topics []string, symKey string) 
 	}
 
 	return res, sdk.RPCClient.Call(&res, "shh_newMessageFilter", params)
-}
-
-type web3ShaResponse struct {
-	Result string `json:"result"`
 }
 
 func web3Sha3Request(sdk *SDK, data string) (string, error) {
@@ -93,10 +73,6 @@ func statusSignupRequest(sdk *SDK, password string) (*signupResponse, error) {
 	return &res, sdk.RPCClient.Call(&res, "status_signup", params)
 }
 
-type getFilterMessagesResponse struct {
-	Result interface{} `json:"result"`
-}
-
 func shhGetFilterMessagesRequest(sdk *SDK, filter string) (interface{}, error) {
 	// `{"jsonrpc":"2.0","id":2968,"method":"shh_getFilterMessages","params":["%s"]}`
 	var res interface{}
@@ -104,6 +80,7 @@ func shhGetFilterMessagesRequest(sdk *SDK, filter string) (interface{}, error) {
 	return res, sdk.RPCClient.Call(&res, "shh_getFilterMessages", filter)
 }
 
+// Message message to be sent though ssh_post calls
 type Message struct {
 	Signature string  `json:"sig"`
 	SymKeyID  string  `json:"symKeyID"`
@@ -112,16 +89,6 @@ type Message struct {
 	TTL       uint32  `json:"ttl"`
 	PowTarget float64 `json:"powTarget"`
 	PowTime   uint32  `json:"powTime"`
-}
-
-// error response {"jsonrpc":"2.0","id":633,"error":{"code":-32000,"message":"message rejected, PoW too low"}}
-type sshPostError struct {
-	Code    float64 `json:"code"`
-	Message string  `json:"message"`
-}
-
-type shhPostResponse struct {
-	Error *sshPostError `json:"error"`
 }
 
 func shhPostRequest(sdk *SDK, msg *Message) (string, error) {
