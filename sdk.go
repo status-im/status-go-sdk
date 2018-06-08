@@ -26,14 +26,15 @@ func (c *SDK) Login(addr, pwd string) (a *Account, err error) {
 		return a, err
 	}
 	return &Account{
-		conn:    c,
-		Address: res.AddressKeyID,
+		conn:         c,
+		AddressKeyID: res.AddressKeyID,
 	}, err
 }
 
 // Signup creates a new account with the given credentials
 func (c *SDK) Signup(pwd string) (a *Account, err error) {
 	res, err := statusSignupRequest(c, pwd)
+
 	if err != nil {
 		return a, err
 	}
@@ -53,7 +54,7 @@ func (c *SDK) SignupAndLogin(password string) (a *Account, err error) {
 		return
 	}
 	la, err := c.Login(a.Address, password)
-	a.Address = la.Address
+	a.AddressKeyID = la.AddressKeyID
 	return
 }
 
