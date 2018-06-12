@@ -6,12 +6,13 @@ import (
 
 // Account represents a logged in user on statusd node
 type Account struct {
-	conn     *SDK
-	Address  string
-	PubKey   string
-	Mnemonic string
-	Username string
-	channels []*Channel
+	conn         *SDK
+	Address      string
+	AddressKeyID string
+	PubKey       string
+	Mnemonic     string
+	Username     string
+	channels     []*Channel
 }
 
 // JoinPublicChannel joins a status public channel

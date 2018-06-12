@@ -117,7 +117,7 @@ func (c *Channel) ContactUpdateRequest(username, image string) error {
 // SendPostRawMsg sends a shh_post message with the given body.
 func (c *Channel) SendPostRawMsg(body string) error {
 	msg := Message{
-		Signature: c.account.Address,
+		Signature: c.account.AddressKeyID,
 		SymKeyID:  c.ChannelKey,
 		Payload:   rawrChatMessage(body),
 		Topic:     c.TopicID,
