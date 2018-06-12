@@ -59,7 +59,7 @@ func TestDictionaryMethods(t *testing.T) {
 		{
 			Description: "shhPostRequest",
 			Response:    &str,
-			Method:      "shh_post",
+			Method:      "shhext_post",
 			Params:      &Message{},
 			Callback: func(sdk *SDK) {
 				response, err := shhPostRequest(sdk, &Message{})
@@ -100,7 +100,7 @@ func TestDictionaryMethods(t *testing.T) {
 				SymKeyID: "",
 			},
 			Callback: func(sdk *SDK) {
-				response, err := newShhMessageFilterFormatRequest(sdk, []string{}, "")
+				response, err := newShhMessageFilterFormatRequest(sdk, []string{}, "", "")
 				assert.NoError(t, err)
 				assert.NotNil(t, response)
 			},

@@ -7,12 +7,15 @@ import (
 	"time"
 )
 
+const discoveryChannelName = "contact-discovery"
+
 // Channel : ...
 type Channel struct {
 	account       *Account
 	name          string
 	filterID      string
-	ChannelKey    string
+	ChannelSymKey string
+	ChannelPubKey string
 	TopicID       string
 	visibility    string
 	subscriptions []*Subscription
@@ -69,9 +72,9 @@ func (c *Channel) ContactRequest(username, image string) error {
 // contact accepts the contact request. It will be sent on the topic that
 // was provided in the NewContactKey message and use the sym-key.
 // Both users will therefore have the same filter.
-func (c *Channel) ConfirmedContactRequest(username, image string) error {
+func (c *Channel) ConfirmedContactRequest(ct *Contact) error {
 	format := `["%s",["%s","%s","%s","%s"]]`
-	msg := fmt.Sprintf(format, ConfirmedContactRequestType, username, image, c.account.Address, "")
+	msg := fmt.Sprintf(format, ConfirmedContactRequestType, c.account.Username, c.account.Image, c.account.Address, "")
 
 	return c.SendPostRawMsg(msg)
 }
@@ -118,7 +121,7 @@ func (c *Channel) ContactUpdateRequest(username, image string) error {
 func (c *Channel) SendPostRawMsg(body string) error {
 	msg := Message{
 		Signature: c.account.AddressKeyID,
-		SymKeyID:  c.ChannelKey,
+		SymKeyID:  c.ChannelSymKey,
 		Payload:   rawrChatMessage(body),
 		Topic:     c.TopicID,
 		TTL:       10,
