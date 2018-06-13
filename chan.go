@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"time"
+
+	"github.com/status-im/status-go-sdk/gfycat"
 )
 
 const discoveryChannelName = "contact-discovery"
@@ -199,6 +201,7 @@ func (c *Channel) pollMessages() (msg *Msg) {
 			if err == nil && supportedMessage(msg.Type) {
 				msg.Channel = c
 				msg.ChannelName = c.name
+				msg.From = gfycat.AddressBasedUsername(msg.PubKey)
 				return
 			} else if err != nil {
 				log.Println("[ ERROR ]", err.Error())
