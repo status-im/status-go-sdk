@@ -12,6 +12,7 @@ type Account struct {
 	PubKey       string
 	Mnemonic     string
 	Username     string
+	Image        string
 	channels     []*Channel
 }
 
@@ -39,19 +40,58 @@ func (a *Account) createAndJoin(name, password string) (*Channel, error) {
 	return a.Join(name, topicID, symKey)
 }
 
+// OnContactRequest executes specified ContactRequestHandler logic when a contact
+// request is received
+func (a *Account) OnContactRequest(fn ContactRequestHandler) error {
+	topicID, err := a.calculatePublicChannelTopicID(discoveryChannelName)
+	if err != nil {
+		return err
+	}
+
+	filterID, err := newShhMessageFilterFormatRequest(a.conn, []string{topicID}, "", a.PubKey)
+	if err != nil {
+		println(err.Error())
+		return err
+	}
+
+	discoveryChannel := &Channel{
+		account:       a,
+		name:          discoveryChannelName,
+		filterID:      filterID,
+		TopicID:       topicID,
+		ChannelPubKey: a.PubKey,
+	}
+
+	_, err = discoveryChannel.Subscribe(func(msg *Msg) {
+		switch c := msg.Properties.(type) {
+		case *NewContactKeyMsg:
+			fn(&Contact{
+				account: a,
+				SymKey:  c.Address,
+				TopicID: c.Topic,
+				Name:    c.Contact.Name,
+				Address: c.Contact.Address,
+				Image:   c.Contact.Image,
+			})
+		}
+	})
+
+	return err
+}
+
 // Join joins a status channel
 func (a *Account) Join(channelName, topicID, symKey string) (*Channel, error) {
-	filterID, err := newShhMessageFilterFormatRequest(a.conn, []string{topicID}, symKey)
+	filterID, err := newShhMessageFilterFormatRequest(a.conn, []string{topicID}, symKey, "")
 	if err != nil {
 		return nil, err
 	}
 
 	ch := &Channel{
-		account:    a,
-		name:       channelName,
-		filterID:   filterID,
-		TopicID:    topicID,
-		ChannelKey: symKey,
+		account:       a,
+		name:          channelName,
+		filterID:      filterID,
+		TopicID:       topicID,
+		ChannelSymKey: symKey,
 	}
 	a.channels = append(a.channels, ch)
 

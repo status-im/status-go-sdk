@@ -166,7 +166,7 @@ type ContactMsg struct {
 }
 
 func contactMsgFromProperties(properties []interface{}) *ContactMsg {
-	crProperties := properties[2].([]interface{})
+	crProperties := properties[1].([]interface{})
 
 	return &ContactMsg{
 		Name:     crProperties[0].(string),

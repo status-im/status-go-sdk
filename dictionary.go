@@ -7,20 +7,28 @@ func shhGenerateSymKeyFromPasswordRequest(sdk *SDK, password string) (string, er
 }
 
 type shhFilterFormatParam struct {
-	AllowP2P bool     `json:"allowP2P"`
-	Topics   []string `json:"topics"`
-	Type     string   `json:"type"`
-	SymKeyID string   `json:"symKeyID"`
+	AllowP2P     bool     `json:"allowP2P"`
+	Topics       []string `json:"topics"`
+	Type         string   `json:"type"`
+	SymKeyID     string   `json:"symKeyID"`
+	PrivateKeyID string   `json:"privateKeyID"`
 }
 
-func newShhMessageFilterFormatRequest(sdk *SDK, topics []string, symKey string) (string, error) {
+func newShhMessageFilterFormatRequest(sdk *SDK, topics []string, symKey, privateKeyID string) (string, error) {
 	// `{"jsonrpc":"2.0","id":2,"method":"shh_newMessageFilter","params":[{"allowP2P":true,"topics":["%s"],"type":"sym","symKeyID":"%s"}]}`
 	var res string
 	params := &shhFilterFormatParam{
-		AllowP2P: true,
-		Topics:   topics,
-		Type:     "sym",
-		SymKeyID: symKey,
+		AllowP2P:     true,
+		Topics:       topics,
+		Type:         "sym",
+		SymKeyID:     symKey,
+		PrivateKeyID: privateKeyID,
+	}
+	if len(symKey) > 0 {
+		params.SymKeyID = symKey
+	}
+	if len(privateKeyID) > 0 {
+		params.PrivateKeyID = privateKeyID
 	}
 
 	return res, sdk.RPCClient.Call(&res, "shh_newMessageFilter", params)
@@ -83,7 +91,8 @@ func shhGetFilterMessagesRequest(sdk *SDK, filter string) (interface{}, error) {
 // Message message to be sent though ssh_post calls
 type Message struct {
 	Signature string  `json:"sig"`
-	SymKeyID  string  `json:"symKeyID"`
+	SymKeyID  string  `json:"symKeyID,omitempty"`
+	PubKey    string  `json:"pubKey,omitempty"`
 	Payload   string  `json:"payload"`
 	Topic     string  `json:"topic"`
 	TTL       uint32  `json:"ttl"`
@@ -93,5 +102,11 @@ type Message struct {
 
 func shhPostRequest(sdk *SDK, msg *Message) (string, error) {
 	var res string
-	return res, sdk.RPCClient.Call(&res, "shh_post", msg)
+	return res, sdk.RPCClient.Call(&res, "shhext_post", msg)
+}
+
+func addSymKey(sdk *SDK, symKey string) (string, error) {
+	// {"jsonrpc":"2.0","method":"shh_addSymKey", "params":["` + symkey + `"], "id":1}
+	var res string
+	return res, sdk.RPCClient.Call(&res, "shh_addSymKey", symKey)
 }
