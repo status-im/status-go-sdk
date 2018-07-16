@@ -12,6 +12,7 @@ type MsgHandler func(msg *Msg)
 type Subscription struct {
 	unsubscribe chan bool
 	channel     *Channel
+	hooks       map[string]MsgHandler
 }
 
 // Subscribe polls on specific channel topic and executes given function if
@@ -23,8 +24,19 @@ func (s *Subscription) Subscribe(channel *Channel, fn MsgHandler) {
 		case <-s.unsubscribe:
 			return
 		default:
-			if msg := channel.pollMessages(); msg != nil {
-				fn(msg)
+			if m := channel.pollMessages(); m != nil {
+				if properties, ok := m.Properties.(*PublishMsg); ok {
+					if properties.Visibility == "~:user-message" {
+						for k := range s.hooks {
+							println(k)
+						}
+						if hook, ok := s.hooks[m.PubKey]; ok {
+							hook(m)
+							continue
+						}
+					}
+				}
+				fn(m)
 			}
 		}
 		// TODO(adriacidre) : move this period to configuration
@@ -36,4 +48,13 @@ func (s *Subscription) Subscribe(channel *Channel, fn MsgHandler) {
 func (s *Subscription) Unsubscribe() {
 	s.unsubscribe <- true
 	s.channel.removeSubscription(s)
+}
+
+// AddHook adds a hook to the current subscription to be exectuted when the
+// message is received from a specific address.
+func (s *Subscription) AddHook(pubkey string, fn MsgHandler) {
+	if s.hooks == nil {
+		s.hooks = make(map[string]MsgHandler)
+	}
+	s.hooks[pubkey] = fn
 }

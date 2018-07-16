@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	botUsername = "TestBot"
+	botUsername = "1to1bot"
 )
 
 func main() {
@@ -26,13 +26,25 @@ func main() {
 	err = bot.OnContactRequest(func(ct *sdk.Contact) {
 		log.Println("Received contact request from " + ct.Name)
 		log.Println("Accepting " + ct.Name + "'s contact request'")
-		// And we simply accept them all (you can add any conditional you want here)
-		err = ct.Accept()
+		checkErr(ct.Accept())
+
+		_, err = ct.Subscribe(func(m *sdk.Msg) {
+			if m.Type != sdk.StandardMessageType {
+				return
+			}
+
+			properties := m.Properties.(*sdk.PublishMsg)
+			log.Println(properties.Text)
+
+			// Print the response.
+			err = ct.Publish(lib.AskMitsuku(properties.Text))
+			checkErr(err)
+		})
 		checkErr(err)
 	})
 	checkErr(err)
 
-	log.Println("Makeing the bot visible on a public channel so you can easily get its address")
+	log.Println("Making the bot visible on a public channel so you can easily get its address")
 	ch, err := bot.JoinPublicChannel("supu")
 	checkErr(err)
 	err = ch.Publish("hey there! I'm " + botUsername + ", and I am accepting contact requests :P")

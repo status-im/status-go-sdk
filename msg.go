@@ -145,6 +145,7 @@ type PublishMsg struct {
 	Visibility string
 	ClockValue float64
 	Timestamp  float64
+	Address    string
 }
 
 func publishMsgFromProperties(properties []interface{}) *PublishMsg {
