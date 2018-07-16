@@ -62,7 +62,8 @@ func (a *Account) OnContactRequest(fn ContactRequestHandler) error {
 		ChannelPubKey: a.PubKey,
 	}
 
-	_, err = discoveryChannel.Subscribe(func(msg *Msg) {
+	var sub *Subscription
+	sub, err = discoveryChannel.Subscribe(func(msg *Msg) {
 		switch c := msg.Properties.(type) {
 		case *NewContactKeyMsg:
 			fn(&Contact{
@@ -72,6 +73,9 @@ func (a *Account) OnContactRequest(fn ContactRequestHandler) error {
 				Name:    c.Contact.Name,
 				Address: c.Contact.Address,
 				Image:   c.Contact.Image,
+				ch:      discoveryChannel,
+				sub:     sub,
+				PubKey:  msg.PubKey,
 			})
 		}
 	})

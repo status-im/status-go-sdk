@@ -86,6 +86,10 @@ func (c *Channel) Publish(body string) error {
 		visibility = c.visibility
 	}
 
+	return c.publish(body, visibility)
+}
+
+func (c *Channel) publish(body, visibility string) error {
 	now := time.Now().Unix() * 1000
 	format := `["%s",["%s","text/plain","%s",%d,%d]]`
 

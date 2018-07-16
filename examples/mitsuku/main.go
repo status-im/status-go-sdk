@@ -4,15 +4,12 @@
 package main
 
 import (
-	"io/ioutil"
 	"log"
-	"net/http"
-	"net/url"
 	"runtime"
-	"strings"
 
 	"github.com/ethereum/go-ethereum/rpc"
 	sdk "github.com/status-im/status-go-sdk"
+	"github.com/status-im/status-go-sdk/examples/lib"
 )
 
 func checkErr(err error) {
@@ -45,26 +42,9 @@ func main() {
 		properties := m.Properties.(*sdk.PublishMsg)
 
 		// Print the response.
-		err := ch.Publish(askMitsuku(properties.Text))
+		err := ch.Publish(lib.AskMitsuku(properties.Text))
 		checkErr(err)
 
 	})
 	runtime.Goexit()
-}
-
-func askMitsuku(question string) string {
-	hc := http.Client{}
-	uri := "https://kakko.pandorabots.com/pandora/talk?botid=87437a824e345a0d&skin=chat"
-	form := url.Values{}
-	form.Add("message", question)
-	req, _ := http.NewRequest("POST", uri, strings.NewReader(form.Encode()))
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-	resp, _ := hc.Do(req)
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	parts := strings.Split(string(body), "</B>")
-	parts = strings.Split(parts[2], "<br>")
-
-	return strings.Trim(parts[0], " ")
 }
